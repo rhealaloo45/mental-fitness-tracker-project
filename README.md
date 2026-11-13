@@ -35,8 +35,18 @@ jupyter notebook "Mental fitness tracker.ipynb"
 
 The notebook reads both CSVs from the repo folder, so run it from there.
 
-## Known issue: the target column is mislabelled
+## Results
 
-The column rename in step 1 (`data.set_axis([...])`) assigns names by position, and the list is one place out. The DALYs column is named `Schizophrenia`, each disorder takes the next disorder's name, and the column used as the target, `mental_fitness`, actually holds alcohol-use-disorder prevalence. As saved, the models predict alcohol-use prevalence from the other columns, not the DALY share.
+The target is `mental_fitness`: mental disorders as a share of total disease burden (DALYs, %). Scores from the saved run of the notebook, on the 20% held-out rows:
 
-Until that is fixed, the scores in the notebook describe the wrong target, so they are not quoted here. The fix is to rename by column name instead of position, so that the DALYs column becomes `mental_fitness`, and then re-run the notebook.
+| Model | RMSE | R² |
+|---|---|---|
+| Random forest | 0.18 | 0.993 |
+
+(The linear regression was only scored on its training rows: R² 0.74, RMSE 1.18.)
+
+Read the 0.993 with care. The split is random across country-years, so the same country's neighbouring years sit in both the training and the test set, and a country's burden barely changes from one year to the next. The score shows the model interpolates well within countries it has seen; it says little about forecasting a future year or an unseen country. A fairer test would hold out the latest years, or whole countries.
+
+## Fixed: the target column was mislabelled
+
+An earlier version of the notebook named the merged columns by position, and the list was one place out: the DALYs column was called `Schizophrenia`, each disorder took the next one's name, and the target `mental_fitness` actually held alcohol-use prevalence. The columns are now named in the order the merge produces them, so `mental_fitness` is the DALY share, and the notebook was re-run end to end (it also needed small changes for current pandas: text columns are encoded by "not numeric" rather than `dtype == 'object'`, the correlation uses `numeric_only=True`, and one stray cell that ran before its data existed was removed).
